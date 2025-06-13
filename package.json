@@ -1,0 +1,17 @@
+{
+  "name": "generatefile",
+  "version": "1.0.0",
+  "main": "index.js",
+  "bin": {
+    "sj": "./bin/cli.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "commander": "^14.0.0",
+    "fs-extra": "^11.3.0",
+    "googleapis": "^150.0.1"
+  }
+}
