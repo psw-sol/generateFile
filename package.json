@@ -9,7 +9,6 @@
   "author": "",
   "license": "ISC",
   "description": "",
-  "type": "module",
   "dependencies": {
     "commander": "^14.0.0",
     "exceljs": "^4.4.0",
