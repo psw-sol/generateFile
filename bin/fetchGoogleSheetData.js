@@ -1,5 +1,12 @@
 const { google } = require('googleapis');
-
+const { downloadXlsxFile } = require('./downloadXlsxFile');
+const { parseExcelFileWithExcelJS } = require('./parseXlsxFile'); // 위에 정의된 파서
+const { saveJsonFiles } = require('./saveJsonFiles');
+const fs = require('fs-extra');
+const path = require('path');
+function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 /**
  * Google API 클라이언트 생성
  * @param {string} credentialsPath
@@ -46,21 +53,27 @@ async function listSpreadsheetsInFolder(drive, folderId) {
 async function exportSpreadsheetTabs(sheets, spreadsheetId) {
     const metadata = await sheets.spreadsheets.get({ spreadsheetId });
 
+    const ranges = metadata.data.sheets
+        .map(sheet => sheet.properties.title)
+        .filter(title => !title.startsWith('~')) // ~로 시작하는 시트 제외
+        .map(title => `${title}!A1:Z1000`);
+
+    const res = await sheets.spreadsheets.values.batchGet({
+        spreadsheetId,
+        ranges,
+    });
+
     const result = {};
-    for (const sheet of metadata.data.sheets) {
-        const sheetTitle = sheet.properties.title;
-        const range = `${sheetTitle}!A1:Z1000`;
+    for (let i = 0; i < res.data.valueRanges.length; i++) {
+        const title = metadata.data.sheets[i].properties.title;
+        if (title.startsWith('~')) continue; // 혹시 모를 이중 방어
 
-        const res = await sheets.spreadsheets.values.get({
-            spreadsheetId,
-            range,
-        });
-
-        result[sheetTitle] = res.data.values || [];
+        result[title] = res.data.valueRanges[i].values || [];
     }
 
     return result;
 }
+
 
 /**
  * 폴더 내 모든 시트 탭 데이터 수집
@@ -75,6 +88,7 @@ async function fetchGoogleSheetData(folderId, credentialsPath) {
     const allData = [];
 
     for (const file of files) {
+        await delay(300); // 👉 문서마다 1초 대기
         const sheetData = await exportSpreadsheetTabs(sheets, file.id);
 
         for (const [sheetName, data] of Object.entries(sheetData)) {
@@ -89,6 +103,32 @@ async function fetchGoogleSheetData(folderId, credentialsPath) {
     return allData;
 }
 
+async function fetchFromDownloadedXlsx(folderId, credentialsPath, outputDir) {
+    const { drive } = await getGoogleClients(credentialsPath);
+    const files = await listSpreadsheetsInFolder(drive, folderId);
+    console.log("test", outputDir)
+    const tmpDir = path.join(outputDir, '__downloaded');
+    await fs.ensureDir(tmpDir);
+
+    const allSheets = [];
+
+    for (const file of files) {
+        const xlsxPath = await downloadXlsxFile(drive, file.id, tmpDir, `${file.name}.xlsx`);
+        const parsedSheets = await parseExcelFileWithExcelJS(xlsxPath);
+
+        console.log("✅ parsedSheets:", parsedSheets); // ← 이게 undefined인지 확인
+        for (const sheet of parsedSheets) {
+            allSheets.push({
+                spreadsheetName: file.name,
+                sheetName: sheet.sheetName,
+                data: sheet.data,
+            });
+        }
+    }
+
+    return allSheets;
+}
 module.exports = {
     fetchGoogleSheetData,
+    fetchFromDownloadedXlsx
 };

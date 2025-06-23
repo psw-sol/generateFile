@@ -9,8 +9,10 @@
   "author": "",
   "license": "ISC",
   "description": "",
+  "type": "module",
   "dependencies": {
     "commander": "^14.0.0",
+    "exceljs": "^4.4.0",
     "fs-extra": "^11.3.0",
     "googleapis": "^150.0.1"
   }
