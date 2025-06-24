@@ -75,7 +75,7 @@ async function saveJsonFiles(sheets, outputDir) {
         const { json } = convertSheetData(data);
 
         const outPath = path.join(outputDir, `${pascalName}.json`);
-        await fs.writeJson(outPath, json, { spaces: 2 });
+        await fs.outputFile(outPath, JSON.stringify(json));
 
         console.log(`✅ ${pascalName}.json 저장 완료`);
     }
