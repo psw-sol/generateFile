@@ -64,11 +64,13 @@ async function exportSpreadsheetTabs(sheets, spreadsheetId) {
     });
 
     const result = {};
-    for (let i = 0; i < res.data.valueRanges.length; i++) {
+    let j = 0;
+    for (let i = 0; i < metadata.data.sheets.length; i++) {
         const title = metadata.data.sheets[i].properties.title;
         if (title.startsWith('~')) continue; // 혹시 모를 이중 방어
 
-        result[title] = res.data.valueRanges[i].values || [];
+        result[title] = res.data.valueRanges[j].values || [];
+        j++;
     }
 
     return result;
