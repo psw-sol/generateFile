@@ -36,13 +36,13 @@ function convertSheetData(rows) {
                 case 'int':
                 case 'float':
                 case 'double':
-                    obj[key] = Number(raw);
+                    obj[key] = toNumberSafe(raw);
                     break;
                 case 'bool':
                     obj[key] = raw?.toLowerCase() === 'true';
                     break;
                 case 'arr_int':
-                    obj[key] = raw?.split(/[,|]/).map(x => Number(x));
+                    obj[key] = raw?.split(/[,|]/).map(x =>toNumberSafe(x));
                     break;
                 case 'arr_string':
                     obj[key] = raw?.split(/[,|]/).map(x => String(x));
@@ -60,6 +60,15 @@ function convertSheetData(rows) {
     return { json, fields };
 }
 
+function toNumberSafe(a) {
+    if (typeof a === 'number') return a;
+    if (typeof a === 'string') {
+        const cleaned = a.replace(/,/g, '');
+        const parsed = Number(cleaned);
+        return isNaN(parsed) ? null : parsed;
+    }
+    return null;
+}
 /**
  * 탭 데이터를 JSON 파일로 저장
  * @param {Array<{spreadsheetName: string, sheetName: string, data: string[][]}>} sheets
