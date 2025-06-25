@@ -56,7 +56,7 @@ async function exportSpreadsheetTabs(sheets, spreadsheetId) {
     const ranges = metadata.data.sheets
         .map(sheet => sheet.properties.title)
         .filter(title => !title.startsWith('~')) // ~로 시작하는 시트 제외
-        .map(title => `${title}!A1:Z1000`);
+        .map(title => `${title}!A1:AZ1000`);
 
     const res = await sheets.spreadsheets.values.batchGet({
         spreadsheetId,
