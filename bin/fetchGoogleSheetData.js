@@ -56,7 +56,7 @@ async function exportSpreadsheetTabs(sheets, spreadsheetId) {
     const ranges = metadata.data.sheets
         .map(sheet => sheet.properties.title)
         .filter(title => !title.startsWith('~')) // ~로 시작하는 시트 제외
-        .map(title => `${title}!A1:AZ1000`);
+        .map(title => `${title}!A:AZ`);
 
     const res = await sheets.spreadsheets.values.batchGet({
         spreadsheetId,
@@ -69,7 +69,9 @@ async function exportSpreadsheetTabs(sheets, spreadsheetId) {
         const title = metadata.data.sheets[i].properties.title;
         if (title.startsWith('~')) continue; // 혹시 모를 이중 방어
 
-        result[title] = res.data.valueRanges[j].values || [];
+        result[title] = (res.data.valueRanges[j].values || []).filter(x=>{
+            return x[0] != null && x[0].toString().trim() !== '';
+        });
         j++;
     }
 
