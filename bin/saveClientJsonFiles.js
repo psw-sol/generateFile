@@ -15,24 +15,34 @@ function toPascalCase(str) {
 /**
  * 2차원 배열 데이터를 JSON 배열로 변환
  * @param {string[][]} rows
- * @returns {{ json: object[], fields: Record<string, string> }}
+ * @returns {{json: {}, fields: {}}}
  */
 function convertSheetData(rows) {
     if (rows.length < 2) {
         throw new Error('시트의 행이 너무 적습니다. 최소 2행(헤더/타입) 필요');
     }
 
-    const headers = rows[0];
-    const types = rows[1];
+    const allHeaders = rows[0];
+    const allTypes = rows[1];
     const dataRows = rows.slice(2);
-    const idKey = headers[0]; // 첫 번째 컬럼이 ID
+
+    const validIndexes = allHeaders
+        .map((h, i) => ({ h, i }))
+        .filter(({ h }) => !h.startsWith('!'))
+        .map(({ i }) => i);
+
+    const headers = validIndexes.map(i => allHeaders[i]);
+    const types = validIndexes.map(i => allTypes[i]);
+
+    const idKey = headers[0]; // 필터링된 첫 번째 컬럼이 ID로 사용됨
 
     const tempMap = new Map();
 
     for (const row of dataRows) {
         const obj = {};
+
         headers.forEach((key, idx) => {
-            const raw = row[idx];
+            const raw = row[validIndexes[idx]];
             const type = types[idx];
 
             switch (type) {
@@ -79,6 +89,7 @@ function convertSheetData(rows) {
     return { json, fields };
 }
 
+
 /**
  * 탭 데이터를 JSON 파일로 저장
  * @param {Array<{spreadsheetName: string, sheetName: string, data: string[][]}>} sheets
@@ -102,6 +113,5 @@ async function saveClientJsonFiles(sheets, outputDir) {
 
 module.exports = {
     saveClientJsonFiles,
-    convertSheetData,
     toPascalCase,
 };

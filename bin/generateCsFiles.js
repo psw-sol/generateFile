@@ -26,8 +26,12 @@ async function generateCsFiles(sheets, outputDir) {
     for (const { sheetName, data } of sheets) {
         const entityName = `${sheetName}Entity`;
         const infoName = `${sheetName}EntityInfo`;
-        const headers = data[0];
-        const types = data[1];
+        const allHeaders = data[0];
+        const allTypes = data[1];
+
+        const validIndexes = allHeaders.map((h, i) => ({ h, i })).filter(({ h }) => !h.startsWith('!')).map(({ i }) => i);
+        const headers = validIndexes.map(i => allHeaders[i]);
+        const types = validIndexes.map(i => allTypes[i]);
 
         const fieldLines = headers.map((h, i) => {
             const rawType = types[i];

@@ -24,13 +24,21 @@ function convertSheetData(rows) {
 
     const headers = rows[0];
     const types = rows[1];
+
+    const validIndexes = headers
+        .map((h, i) => ({ h, i }))
+        .filter(({ h }) => !h.startsWith('!'))
+        .map(({ i }) => i);
+
+    const filteredHeaders = validIndexes.map(i => headers[i]);
+    const filteredTypes = validIndexes.map(i => types[i]);
     const dataRows = rows.slice(2);
 
     const json = dataRows.map(row => {
         const obj = {};
-        headers.forEach((key, idx) => {
-            const raw = row[idx];
-            const type = types[idx];
+        filteredHeaders.forEach((key, idx) => {
+            const raw = row[validIndexes[idx]];
+            const type = filteredTypes[idx];
 
             switch (type) {
                 case 'int':
@@ -42,7 +50,7 @@ function convertSheetData(rows) {
                     obj[key] = raw?.toLowerCase() === 'true';
                     break;
                 case 'arr_int':
-                    obj[key] = raw?.split(/[,|]/).map(x =>toNumberSafe(x));
+                    obj[key] = raw?.split(/[,|]/).map(x => toNumberSafe(x));
                     break;
                 case 'arr_string':
                     obj[key] = raw?.split(/[,|]/).map(x => String(x));
@@ -55,7 +63,7 @@ function convertSheetData(rows) {
     });
 
     const fields = {};
-    headers.forEach((h, i) => (fields[h] = types[i]));
+    filteredHeaders.forEach((h, i) => (fields[h] = filteredTypes[i]));
 
     return { json, fields };
 }
